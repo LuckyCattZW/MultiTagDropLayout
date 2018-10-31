@@ -10,8 +10,15 @@ import org.junit.Assert.*
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    private val list: List<String> by lazy { mutableListOf("A", "B", "C", "D", "E", "F", "G") }
+
+
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+
+        for(index in list.indices.reversed()){
+            println("index = ${list[index]}")
+        }
     }
 }

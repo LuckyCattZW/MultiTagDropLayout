@@ -8,7 +8,6 @@ import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
 import android.util.DisplayMetrics
-import android.util.Log.e
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -74,10 +73,15 @@ class MultiTabDropLayout
         }
     }
 
-    var adapter: IMultiTabDropAdapter? = null
+    private var observer: AdapterMultiTabObserver? = null
+
+    var adapter: BaseMultiTabDropAdapter? = null
         set(value) {
             value ?: throw NullPointerException("Adapter cannot be null!!!")
             field = value
+            if(adapter != null && observer != null) adapter!!.unregisterDataSetObserver(observer!!)
+            observer = AdapterMultiTabObserver(this@MultiTabDropLayout)
+            value.registerDataSetObserver(observer!!)
             mountTabViews(value)
         }
 
@@ -143,10 +147,7 @@ class MultiTabDropLayout
         addView(_shadowBg.apply { alpha = 0F
                                   visibility = View.GONE
             setOnClickListener {
-                if (!whetherShowMenuContentContainer || currentPosition== -1) {
-                    return@setOnClickListener
-                }
-                closeMenuContentAnimator(_tabContainer.getChildAt(currentPosition), currentPosition)
+                closeMenuContent()
             }
         }, -1, LayoutParams(LayoutParams.MATCH_PARENT, _metrics.heightPixels))
     }
@@ -164,7 +165,7 @@ class MultiTabDropLayout
         }
     }
 
-    private fun mountTabViews(adapter: IMultiTabDropAdapter) {
+    private fun mountTabViews(adapter: BaseMultiTabDropAdapter) {
         for (position in 0 until adapter.getCount()) {
             post {
                 _tabContainer.addView(adapter.getItemForTab(position, _tabContainer).apply {
@@ -226,8 +227,12 @@ class MultiTabDropLayout
             addListener(closeAnimatorListener)
             this@run
         }.start()
+    }
 
-        adapter?.onMenuContentClosed(view, position)
+    private fun closeMenuContent() {
+        if (whetherShowMenuContentContainer && currentPosition != -1) {
+            closeMenuContentAnimator(_tabContainer.getChildAt(currentPosition), currentPosition)
+        }
     }
 
     private fun existContentMenuBlockLayer():Boolean = _menuContentContainer.indexOfChild(_contentMenuBlockLayer) != -1
@@ -260,4 +265,11 @@ class MultiTabDropLayout
 
     private fun convertPx(unit: Int, value: Int) =
         TypedValue.applyDimension(unit, value.toFloat(), resources.displayMetrics)
+
+    private companion object {
+        private class AdapterMultiTabObserver constructor(private val _root: MultiTabDropLayout)
+            : BaseMultiTabObserver() {
+            override fun onChangedMenuContentClose() = _root.closeMenuContent()
+        }
+    }
 }

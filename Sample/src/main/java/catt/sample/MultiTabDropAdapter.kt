@@ -8,10 +8,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import catt.custom.view.IMultiTabDropAdapter
+import catt.custom.view.BaseMultiTabDropAdapter
 import es.dmoral.toasty.Toasty
 
-class MultiTabDropAdapter constructor(private val _context: Context) : IMultiTabDropAdapter {
+class MultiTabDropAdapter constructor(private val _context: Context) : BaseMultiTabDropAdapter() {
     private val _TAG:String by lazy { MultiTabDropAdapter::class.java.simpleName }
     private var tabList: List<String> = mutableListOf(
         "要闻", "视频", "推荐", "北京", "军事", "股票", "动漫", "科技", "法制", "国际", "汽车", "电影", "游戏", "房产"
@@ -33,6 +33,8 @@ class MultiTabDropAdapter constructor(private val _context: Context) : IMultiTab
             setOnClickListener {
                 Toasty.info(context, "onClick: position = $position", Toast.LENGTH_SHORT, true).show()
                 e(_TAG, "onClick: position = $position, Content = ${tabList[position]}")
+
+                this@MultiTabDropAdapter.notifyChangedMenuContentClose()
             }
         }
     }
